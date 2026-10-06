@@ -1,0 +1,22 @@
+[
+  {
+    "label": "sess9",
+    "n_pulses": 42088,
+    "n_units": 57,
+    "corr": 0.451,
+    "beta_base": 0.406,
+    "dev_explained": 0.278,
+    "gain_per_pulse": 0.154,
+    "light_saving": 0.134
+  },
+  {
+    "label": "sess12",
+    "n_pulses": 50309,
+    "n_units": 47,
+    "corr": 0.434,
+    "beta_base": 0.472,
+    "dev_explained": 0.192,
+    "gain_per_pulse": 0.29,
+    "light_saving": 0.225
+  }
+]
