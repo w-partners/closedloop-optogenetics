@@ -1,0 +1,98 @@
+[
+  {
+    "label": "sess9",
+    "n_pulses": 42088,
+    "thresholds": [
+      {
+        "pct": 50,
+        "threshold": 31.0,
+        "select_frac": 0.678,
+        "gain_per_pulse": 0.089,
+        "light_saving": 0.081
+      },
+      {
+        "pct": 60,
+        "threshold": 33.0,
+        "select_frac": 0.616,
+        "gain_per_pulse": 0.108,
+        "light_saving": 0.098
+      },
+      {
+        "pct": 70,
+        "threshold": 36.0,
+        "select_frac": 0.528,
+        "gain_per_pulse": 0.136,
+        "light_saving": 0.119
+      },
+      {
+        "pct": 75,
+        "threshold": 38.0,
+        "select_frac": 0.471,
+        "gain_per_pulse": 0.154,
+        "light_saving": 0.134
+      },
+      {
+        "pct": 80,
+        "threshold": 40.0,
+        "select_frac": 0.414,
+        "gain_per_pulse": 0.173,
+        "light_saving": 0.148
+      },
+      {
+        "pct": 90,
+        "threshold": 45.0,
+        "select_frac": 0.274,
+        "gain_per_pulse": 0.22,
+        "light_saving": 0.18
+      }
+    ]
+  },
+  {
+    "label": "sess12",
+    "n_pulses": 50309,
+    "thresholds": [
+      {
+        "pct": 50,
+        "threshold": 27.0,
+        "select_frac": 0.508,
+        "gain_per_pulse": 0.186,
+        "light_saving": 0.157
+      },
+      {
+        "pct": 60,
+        "threshold": 30.0,
+        "select_frac": 0.414,
+        "gain_per_pulse": 0.227,
+        "light_saving": 0.185
+      },
+      {
+        "pct": 70,
+        "threshold": 33.0,
+        "select_frac": 0.327,
+        "gain_per_pulse": 0.266,
+        "light_saving": 0.21
+      },
+      {
+        "pct": 75,
+        "threshold": 35.0,
+        "select_frac": 0.272,
+        "gain_per_pulse": 0.29,
+        "light_saving": 0.225
+      },
+      {
+        "pct": 80,
+        "threshold": 37.0,
+        "select_frac": 0.22,
+        "gain_per_pulse": 0.316,
+        "light_saving": 0.24
+      },
+      {
+        "pct": 90,
+        "threshold": 42.0,
+        "select_frac": 0.119,
+        "gain_per_pulse": 0.372,
+        "light_saving": 0.271
+      }
+    ]
+  }
+]
