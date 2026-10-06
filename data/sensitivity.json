@@ -1,0 +1,104 @@
+[
+  {
+    "label": "sess9",
+    "n_pulses": 42088,
+    "n_units": 57,
+    "median_ipi_ms": 80.2,
+    "w50": {
+      "corr": 0.331,
+      "beta_base": 0.195,
+      "dev_explained": 0.148,
+      "gain_per_pulse": 0.124,
+      "light_saving": 0.11,
+      "test_select_frac": 0.43
+    },
+    "w100": {
+      "corr": 0.398,
+      "beta_base": 0.29,
+      "dev_explained": 0.214,
+      "gain_per_pulse": 0.153,
+      "light_saving": 0.133,
+      "test_select_frac": 0.423
+    },
+    "w200": {
+      "corr": 0.451,
+      "beta_base": 0.406,
+      "dev_explained": 0.278,
+      "gain_per_pulse": 0.154,
+      "light_saving": 0.134,
+      "test_select_frac": 0.471
+    },
+    "w300": {
+      "corr": 0.462,
+      "beta_base": 0.447,
+      "dev_explained": 0.297,
+      "gain_per_pulse": 0.156,
+      "light_saving": 0.135,
+      "test_select_frac": 0.485
+    },
+    "nonoverlap_ipi300": {
+      "n": 1561,
+      "frac": 0.037,
+      "corr": 0.477,
+      "beta_base": 0.479,
+      "dev_explained": 0.302
+    },
+    "prev_pulse_covariate": {
+      "corr_base_prevEvoked": 0.704,
+      "beta_base": 0.079,
+      "beta_prevEvoked": 0.43,
+      "dev_explained": 0.388
+    }
+  },
+  {
+    "label": "sess12",
+    "n_pulses": 50309,
+    "n_units": 47,
+    "median_ipi_ms": 99.6,
+    "w50": {
+      "corr": 0.331,
+      "beta_base": 0.226,
+      "dev_explained": 0.132,
+      "gain_per_pulse": 0.214,
+      "light_saving": 0.176,
+      "test_select_frac": 0.315
+    },
+    "w100": {
+      "corr": 0.396,
+      "beta_base": 0.334,
+      "dev_explained": 0.18,
+      "gain_per_pulse": 0.262,
+      "light_saving": 0.208,
+      "test_select_frac": 0.281
+    },
+    "w200": {
+      "corr": 0.434,
+      "beta_base": 0.472,
+      "dev_explained": 0.192,
+      "gain_per_pulse": 0.29,
+      "light_saving": 0.225,
+      "test_select_frac": 0.272
+    },
+    "w300": {
+      "corr": 0.433,
+      "beta_base": 0.541,
+      "dev_explained": 0.173,
+      "gain_per_pulse": 0.286,
+      "light_saving": 0.223,
+      "test_select_frac": 0.281
+    },
+    "nonoverlap_ipi300": {
+      "n": 3986,
+      "frac": 0.079,
+      "corr": 0.451,
+      "beta_base": 0.489,
+      "dev_explained": 0.209
+    },
+    "prev_pulse_covariate": {
+      "corr_base_prevEvoked": 0.703,
+      "beta_base": 0.203,
+      "beta_prevEvoked": 0.342,
+      "dev_explained": 0.26
+    }
+  }
+]
