@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Recent network activity predicts optogenetic response magnitude</title>
+<style>
+  @page { size: A4; margin: 2.5cm; }
+  body { font-family: 'Noto Sans CJK JP', 'DejaVu Sans', sans-serif; font-size: 11pt; line-height: 1.6; color: #111; }
+  h1 { font-size: 17pt; line-height: 1.3; margin-bottom: 0.2em; }
+  h2 { font-size: 13pt; margin-top: 1.6em; border-bottom: 1px solid #ccc; padding-bottom: 0.2em; }
+  .authors { font-size: 12pt; margin: 0.6em 0 0.2em; }
+  .affil { font-size: 10pt; color: #444; margin-bottom: 1em; }
+  .abstract { background: #f7f7f7; padding: 1em 1.2em; border-left: 3px solid #0ea5e9; margin: 1.2em 0; font-size: 10.5pt; }
+  .keywords { font-size: 10pt; color: #555; margin-top: 0.6em; }
+  figure { margin: 1.5em 0; text-align: center; }
+  figure img { max-width: 100%; }
+  figcaption { font-size: 9.5pt; color: #333; text-align: left; margin-top: 0.5em; line-height: 1.5; }
+  table { border-collapse: collapse; margin: 1em auto; font-size: 10pt; }
+  th, td { border: 1px solid #bbb; padding: 0.4em 0.8em; text-align: center; }
+  th { background: #f0f0f0; }
+  .refs { font-size: 9.5pt; line-height: 1.5; }
+  .refs li { margin-bottom: 0.4em; }
+  .note { font-size: 9.5pt; color: #666; border: 1px dashed #aaa; padding: 0.8em; margin: 1em 0; }
+</style>
+</head>
+<body>
+
+<h1>Recent network activity predicts optogenetic response magnitude: data-driven design of efficient closed-loop photostimulation <i>in silico</i></h1>
+
+<div class="authors">Dongchul Suh</div>
+<div class="affil">AI BioLab Insights, Independent Research Laboratory, Seogwipo, Jeju, Republic of Korea<br>
+Corresponding author: supply@openagentx.org</div>
+
+<div class="abstract">
+<b>Abstract.</b> Closed-loop optogenetics promises precise neural control by delivering light only when needed, but designing efficient stimulation policies requires knowing what makes a pulse effective. Here we re-analyzed a public dataset of pulsed optogenetic stimulation in mouse hippocampus (DANDI Archive dandiset 000568; 92,397 pulses across two sessions from one animal, 57 and 47 simultaneously recorded units). We found that the magnitude of the evoked response depends strongly on recent network activity (Pearson r = 0.45 and 0.43) but not on inter-pulse interval. The effect persisted across baseline window widths (50&ndash;300&nbsp;ms) and in the subset of pulses with no window overlap (r&nbsp;=&nbsp;0.48 and 0.45). A Poisson generalized linear model using pre-stimulus baseline activity predicted evoked spike counts on held-out data (27.8% and 19.2% deviance explained). An offline closed-loop policy that stimulates only when baseline activity meets or exceeds its 75th percentile increased spikes per pulse by 15&ndash;29% and reduced total light delivery by 13&ndash;23% for matched total activation, with gains positive across policy thresholds from the 50th to the 90th percentile. Embedding the fitted response model in a virtual closed-loop experiment reproduced the efficiency gain (+12.2% spikes per pulse, &minus;10.9% light). All analyses used only public data with fully open code and fixed random seeds. Limitations include a single animal, a dim-light stimulation paradigm, and a hippocampal (non-retinal) preparation. We propose activity-dependent timing &mdash; stimulating when the circuit is receptive &mdash; as a simple, data-driven principle for closed-loop photostimulation design.
+<div class="keywords"><b>Keywords:</b> optogenetics, closed-loop stimulation, in silico, state dependence, Poisson GLM, open science</div>
+</div>
+
+<h2>Introduction</h2>
+<p>
+Optogenetics &mdash; the expression of light-sensitive opsins in neurons to control their activity with light &mdash; was recognized with the 2026 Nobel Prize in Physiology or Medicine (Deisseroth, Hegemann and Nagel) [1]. Beyond its established role as a research tool, optogenetics is being explored for therapeutic applications including vision restoration and neurological disorders. A central engineering challenge is <i>efficiency</i>: light delivery should be minimized to reduce phototoxicity and energy consumption while maximizing the desired neural effect.
+</p>
+<p>
+Closed-loop systems address this by coupling real-time neural readout to stimulation, delivering light only when a target neural state is detected [2]. Yet most closed-loop designs focus on <i>when to intervene</i> given a fixed stimulus, and less on <i>what makes a stimulus effective</i> at a given moment. If the efficacy of an identical light pulse varies with the ongoing state of the circuit, then timing stimulation to receptive states could substantially improve efficiency &mdash; a hypothesis testable with existing public data.
+</p>
+<p>
+Here we take a fully data-driven, <i>in silico</i> approach. Using a public dataset of pulsed optogenetic stimulation with simultaneous extracellular recordings (DANDI 000568) [3], we (i) quantify how evoked responses depend on recent network activity, (ii) fit a predictive stimulus&ndash;response model, (iii) evaluate a closed-loop timing policy offline, and (iv) embed the fitted model in a virtual closed-loop experiment. All code, data references and random seeds are open, so every result is independently reproducible.
+</p>
+<p>
+Valero et al., who collected this dataset, already showed that evoked responses vary with brain state &mdash; reduced during sharp-wave ripples, modulated by theta phase and place-field location [5]. We build directly on their finding and ask a narrower, engineering-oriented question: can a <i>simpler, real-time-compatible</i> predictor &mdash; the population spike count in the 200&nbsp;ms before each pulse &mdash; predict pulse-by-pulse efficacy well enough to drive a closed-loop timing policy? Our contribution is therefore not the qualitative phenomenon of state dependence, but its quantification as a predictive model and its translation into a concrete stimulation policy.
+</p>
+
+<h2>Methods</h2>
+<h3>Data</h3>
+<p>
+We analyzed two sessions (sess9, sess12) from subject sub-fCamk1 in DANDI Archive dandiset 000568, &ldquo;Probing subthreshold dynamics of hippocampal neurons by pulsed optogenetics&rdquo; [3]. Each session contains optogenetic stimulus series (OptogeneticSeries, six &mu;LED sites, 2&nbsp;ms pulses, 2&ndash;4.5&nbsp;&mu;A drive current corresponding to 0.02&ndash;0.1&nbsp;&mu;W total light) and spike-sorted extracellular units (57 units in sess9, 47 in sess12). Files were accessed in NWB format via the DANDI API.
+</p>
+<h3>Pulse extraction and response quantification</h3>
+<p>
+Pulse onsets were detected by thresholding each OptogeneticSeries at 50% of its maximum (42,088 pulses in sess9; 50,309 in sess12). For each pulse we computed, per unit, the spike count in a baseline window [&minus;200,&nbsp;0)&nbsp;ms and an evoked window [0,&nbsp;100)&nbsp;ms relative to pulse onset, then summed across units. Analyses used NumPy/SciPy with fixed random seeds.
+</p>
+<h3>Baseline-window sensitivity analysis</h3>
+<p>
+To test robustness to the baseline-window choice, we recomputed baseline spike counts for window widths of 50, 100, 200 and 300&nbsp;ms and repeated the correlation and GLM analyses. For the strict non-overlap test we selected the subset of pulses with inter-pulse interval&nbsp;&ge;&nbsp;300&nbsp;ms &mdash; for which the 200&nbsp;ms baseline window cannot overlap the previous pulse&rsquo;s evoked window &mdash; and repeated the same analyses. We additionally fitted a GLM including the previous pulse&rsquo;s evoked spike count (log(1&nbsp;+&nbsp;x)) as a covariate alongside baseline activity.
+</p>
+<h3>Stimulus&ndash;response model</h3>
+<p>
+We fitted a Poisson generalized linear model (GLM) predicting total evoked spikes from log(1&nbsp;+&nbsp;baseline spikes) and stimulation site (one-hot). Pulses were split into train (first half) and test (second half) sets; fitting used iteratively reweighted least squares. Performance was measured as deviance explained relative to a constant-rate null model on the test set.
+</p>
+<h3>Offline closed-loop policy evaluation</h3>
+<p>
+A closed-loop timing rule was defined on the train half: stimulate only when a candidate pulse&rsquo;s baseline activity meets or exceeds the 75th percentile of the train set. To test sensitivity to this choice, we repeated the evaluation with thresholds at the 50th, 60th, 70th, 80th and 90th percentiles. The rule was then evaluated on the test half using the <i>recorded</i> outcomes (no model involved): spikes per pulse, and total pulses required to match a fixed total spike count (light saving).
+</p>
+<h3>Hybrid <i>in silico</i> experiment</h3>
+<p>
+To test the policy in a forward simulation, we ran a virtual 1,200&nbsp;s session in which candidate pulse times arrived as a Poisson process (6.4&nbsp;s<sup>&minus;1</sup>, matching the empirical rate), per-unit baseline activity was simulated as Poisson with the empirical per-unit rates, and evoked responses were sampled from the fitted GLM. The closed-loop controller fired only when simulated baseline exceeded the train-derived threshold; the open-loop control fired at every candidate time.
+</p>
+<h3>Statistical analysis and reproducibility</h3>
+<p>
+Analyses were performed in Python 3.12.3 (NumPy 1.26.4, SciPy 1.11.4). All analyses are deterministic; figure subsampling used a fixed seed (NumPy <tt>default_rng(0)</tt>). The Poisson GLM was fitted by iteratively reweighted least squares (50 iterations maximum, convergence tolerance 10<sup>&minus;8</sup>) with predictors log(1&nbsp;+&nbsp;baseline spikes) and stimulation site (one-hot). Pulses were split chronologically into train (first half) and test (second half) sets. Reported 95% confidence intervals are quasi-Poisson Wald intervals: standard errors scaled by the square root of the dispersion estimate (Pearson &chi;&sup2;/degrees of freedom; 2.21 and 2.41 for sess9 and sess12). Slow (&gt;60&nbsp;s) fluctuations were removed by 60-s block demeaning (blocks aligned to the first pulse). Per-block correlations used twenty consecutive equal-count blocks (&sim;5&nbsp;min each) per session. Analysis scripts and computed tables are archived at https://github.com/w-partners/closedloop-optogenetics.
+</p>
+<h3>AI assistance disclosure</h3>
+<p>
+Data analysis code was written with assistance from Claude (Anthropic, Muse Spark). All analyses were executed, and every reported number was verified against the computed outputs, by the author, who takes full responsibility for the content.
+</p>
+
+<h2>Results</h2>
+<h3>Evoked responses depend on recent network activity</h3>
+<p>
+Across 92,397 pulses, the total evoked spike count correlated strongly with pre-stimulus baseline activity (sess9: r&nbsp;=&nbsp;0.451; sess12: r&nbsp;=&nbsp;0.434; Fig.&nbsp;1). In contrast, inter-pulse interval showed no systematic relationship with response magnitude, suggesting that, under these dim-light conditions, recent network activity is a stronger predictor of response magnitude than inter-pulse interval. After removing slow (&gt;60&nbsp;s) fluctuations by 60-s block demeaning, the correlation remained substantial (r&nbsp;=&nbsp;0.317 and 0.359), and was positive in all twenty consecutive blocks (&sim;5&nbsp;min each; minimum 0.22), confirming the effect is not an artifact of session drift. Note on interpretation: with a median inter-pulse interval of 80&ndash;100&nbsp;ms, the 200&nbsp;ms baseline window overlaps preceding pulses, and baseline activity correlates with the previous pulse's evoked response (r&nbsp;=&nbsp;0.70). The predictor is therefore best understood as <i>recent driven activity history</i> rather than purely spontaneous network state &mdash; a legitimate controller input, but a weaker mechanistic claim than the term &ldquo;ongoing state&rdquo; might suggest (see Limitations).
+</p>
+<figure>
+<img src="fig1_state_dependence.png" alt="Figure 1">
+<figcaption><b>Figure 1.</b> Recent network activity predicts optogenetic response magnitude. Each point is one light pulse (8,000 randomly subsampled per panel); red curve shows binned means. Baseline: total spikes in [&minus;200,&nbsp;0)&nbsp;ms; evoked: total spikes in [0,&nbsp;100)&nbsp;ms across all recorded units.</figcaption>
+</figure>
+<h3>Robustness to baseline-window choice</h3>
+<p>
+Because the 200&nbsp;ms baseline window overlaps preceding pulses at these stimulation rates (median inter-pulse interval 80&ndash;100&nbsp;ms), we tested whether the state dependence survives shorter windows and strict non-overlap. Shortening the window to 50&nbsp;ms and 100&nbsp;ms preserved the correlation in both sessions (r&nbsp;=&nbsp;0.331/0.331 and 0.398/0.396; Table&nbsp;1), with the Poisson GLM baseline coefficient remaining positive throughout. Most decisively, on the subset of pulses whose 200&nbsp;ms baseline window provably cannot overlap the previous pulse (inter-pulse interval&nbsp;&ge;&nbsp;300&nbsp;ms; 3.7% and 7.9% of pulses), the correlation was as strong as in the full sample (r&nbsp;=&nbsp;0.477 and 0.451) and the GLM coefficient remained positive (+0.479, +0.489). The predictive effect is therefore not an artifact of window overlap: it reflects recent network activity, including recent driven history, rather than contamination from the immediately preceding pulse alone. Adding the previous pulse&rsquo;s evoked response as a GLM covariate reduced but did not eliminate the baseline coefficient (+0.079, +0.203), consistent with the two predictors sharing variance (r&nbsp;=&nbsp;0.70) rather than the baseline effect being fully explained away.
+</p>
+<table>
+<tr><th>Window</th><th>sess9 r</th><th>sess12 r</th><th>sess9 &beta;</th><th>sess12 &beta;</th></tr>
+<tr><td>[&minus;50, 0)&nbsp;ms</td><td>0.331</td><td>0.331</td><td>+0.195</td><td>+0.226</td></tr>
+<tr><td>[&minus;100, 0)&nbsp;ms</td><td>0.398</td><td>0.396</td><td>+0.290</td><td>+0.334</td></tr>
+<tr><td>[&minus;200, 0)&nbsp;ms</td><td>0.451</td><td>0.434</td><td>+0.406</td><td>+0.472</td></tr>
+<tr><td>[&minus;300, 0)&nbsp;ms</td><td>0.462</td><td>0.433</td><td>+0.447</td><td>+0.541</td></tr>
+<tr><td>Non-overlap (IPI&nbsp;&ge;&nbsp;300&nbsp;ms)</td><td>0.477</td><td>0.451</td><td>+0.479</td><td>+0.489</td></tr>
+</table>
+<figcaption style="text-align:center"><b>Table 1.</b> Baseline-window sensitivity. Pearson r and Poisson GLM baseline coefficient (&beta;) across window widths; last row uses only pulses whose baseline window cannot overlap the previous pulse.</figcaption>
+<h3>A predictive stimulus&ndash;response model</h3>
+<p>
+The Poisson GLM assigned a positive coefficient to baseline activity in both sessions (&beta;&nbsp;=&nbsp;+0.406, 95%&nbsp;CI&nbsp;[0.391,&nbsp;0.421]; +0.472, 95%&nbsp;CI&nbsp;[0.458,&nbsp;0.486]; quasi-Poisson, dispersion&nbsp;&sim;2.3&times;) and explained 27.8% and 19.2% of test-set deviance, confirming that the state dependence is learnable and generalizes to unseen pulses.
+</p>
+<h3>Closed-loop timing improves efficiency</h3>
+<p>
+The offline policy evaluation on held-out pulses (Table&nbsp;2) showed consistent gains: stimulating only in high-baseline states increased spikes per pulse by 15.4% (sess9) and 29.0% (sess12), equivalent to 13.4% and 22.5% less light for matched total activation. (In sess9, slow drift meant the train-set 75th-percentile threshold selected 47% of test pulses rather than the intended 25%; the gain remains positive but the &ldquo;top-quartile&rdquo; framing applies cleanly only to sess12.)
+</p>
+<table>
+<tr><th></th><th>Pulses</th><th>Units</th><th>r (baseline&rarr;evoked)</th><th>GLM dev. expl.</th><th>Gain / pulse</th><th>Light saving</th></tr>
+<tr><td>sess9</td><td>42,088</td><td>57</td><td>0.451</td><td>27.8%</td><td>+15.4%</td><td>13.4%</td></tr>
+<tr><td>sess12</td><td>50,309</td><td>47</td><td>0.434</td><td>19.2%</td><td>+29.0%</td><td>22.5%</td></tr>
+</table>
+<figcaption style="text-align:center"><b>Table 2.</b> Replication across two sessions (one animal). Policy evaluated on held-out test pulses using recorded outcomes.</figcaption>
+<p>
+The gain was not specific to the 75th-percentile threshold. Sweeping the threshold from the 50th to the 90th percentile traced a smooth efficiency&ndash;stimulation-rate trade-off in both sessions (Fig.&nbsp;2): stricter thresholds selected fewer pulses but yielded larger per-pulse gains (sess9: +8.9% at the 50th percentile rising to +22.0% at the 90th; sess12: +18.6% to +37.2%), with light saving increasing monotonically as well. Gain remained positive at every threshold, confirming that the 75th percentile is one operating point on a well-behaved curve rather than a cherry-picked optimum.
+</p>
+<figure>
+<img src="fig2_threshold_tradeoff.png" alt="Figure 2">
+<figcaption><b>Figure 2.</b> Policy threshold trade-off. Each point is one threshold percentile (train-set baseline); ringed points mark the 75th-percentile operating point used in Table&nbsp;2. Stricter thresholds select fewer pulses and yield larger per-pulse gains in both sessions.</figcaption>
+</figure>
+<h3>Virtual closed-loop experiment</h3>
+<p>
+With the fitted GLM embedded as the virtual circuit&rsquo;s response function, the closed-loop controller delivered 1,053 pulses versus 7,738 for open-loop over the simulated session, achieving 18.04 vs 16.08 spikes per pulse (+12.2%) and requiring 10.9% less light for matched activation (Fig.&nbsp;3), reproducing the direction of the offline efficiency gain in simulation.
+</p>
+<figure>
+<img src="hybrid_closed_vs_open.png" alt="Figure 3">
+<figcaption><b>Figure 3.</b> Hybrid <i>in silico</i> experiment with the data-fitted GLM as the response model. Each point is one delivered pulse; dashed lines show mean spikes per pulse. The closed-loop controller fires only in receptive network states.</figcaption>
+</figure>
+
+<h2>Discussion</h2>
+<p>
+Our central finding is simple: <i>when</i> you stimulate matters. At the dim light levels used here, identical 2&nbsp;ms pulses evoked markedly different responses depending on recent network activity &mdash; a dependence strong enough (r&nbsp;&approx;&nbsp;0.44; r&nbsp;&approx;&nbsp;0.32&ndash;0.36 after detrending) to support a practical closed-loop timing policy with double-digit efficiency gains, replicated across two sessions.
+</p>
+<p>
+This principle &mdash; stimulate when the circuit is receptive &mdash; is directly actionable for closed-loop optogenetics design: a real-time controller needs only a short baseline firing-rate estimate to decide whether a pulse is worth delivering. Because the analysis uses only public data and open code, the result is immediately auditable and extensible.
+</p>
+<p>
+<b>Limitations.</b> (1) Single animal: both sessions are from one mouse, so this is within-animal replication. We verified that dandiset 000568 contains no additional optogenetic stimulation sessions, so independent replication across animals must await new data. (2) The dataset used dim, subthreshold-oriented stimulation; state dependence under strong, suprathreshold drive remains untested. (3) Hippocampal preparation: no direct extrapolation to retinal or clinical applications is claimed. (4) The offline policy evaluation is observational (decisions applied to recorded outcomes) rather than interventional, though the train/test split guards against overfitting. Because the virtual experiment uses the fitted GLM as its response model, it should be interpreted as a consistency test of the control strategy rather than an independent validation of the biological effect. (5) Prior art: the qualitative phenomenon of state-dependent optogenetic responses was reported by Valero et al. [5]; our novelty lies in the real-time predictor, the fitted response model, and the closed-loop policy evaluation &mdash; not in the discovery of state dependence itself. (6) Window overlap: at the observed pulse rates (median inter-pulse interval 80&ndash;100&nbsp;ms) the 200&nbsp;ms baseline window overlaps preceding pulses (baseline vs. previous evoked response r&nbsp;=&nbsp;0.70), so the predictor captures recent driven activity history, not purely spontaneous state &mdash; however, a window-sensitivity analysis (see Results) shows the effect is not an artifact of this overlap. (7) Session drift: sess9 showed a slow (+19.5%) rise in baseline and evoked activity; detrended analyses are reported alongside raw values throughout.
+</p>
+<p>
+<b>Positioning.</b> More broadly, the workflow used here &mdash; public data, predictive response modeling, offline policy evaluation, and <i>in silico</i> testing &mdash; may provide a useful template for evaluating state-dependent stimulation strategies in other neural systems.
+</p>
+
+<h2>Data and code availability</h2>
+<p>
+Neural data: DANDI Archive dandiset 000568 (https://dandiarchive.org/dandiset/000568), files sub-fCamk1_ses-fCamk1-200827-sess9 and sub-fCamk1_ses-fCamk1-200901-sess12 (no-raw-data NWB). Analysis code, random seeds and computed tables: https://github.com/w-partners/closedloop-optogenetics.
+</p>
+
+<h2>References</h2>
+<ol class="refs">
+<li>The Nobel Prize in Physiology or Medicine 2026 &mdash; awarded jointly to Karl Deisseroth, Peter Hegemann and Georg Nagel &ldquo;for their discoveries concerning light-gated ion channels and optogenetics&rdquo;. NobelPrize.org, press release, 5 October 2026. https://www.nobelprize.org/prizes/medicine/2026/press-release/</li>
+<li>Grosenick L, Marshel JH, Deisseroth K. Closed-loop and activity-guided optogenetic control. <i>Neuron</i>. 2015;86(1):106&ndash;139. doi:10.1016/j.neuron.2015.03.034. PMID: 25856490.</li>
+<li>Valero M, Zutshi I, Yoon E, Buzs&aacute;ki G. Probing subthreshold dynamics of hippocampal neurons by pulsed optogenetics (Version 0.230705.1633) [Data set]. DANDI Archive, 2023. doi:10.48324/dandi.000568/0.230705.1633. License: CC-BY-4.0. https://dandiarchive.org/dandiset/000568</li>
+<li>Teeters JL et al. Neurodata Without Borders: Creating a Common Data Format for Neurophysiology. <i>Neuron</i>. 2015;88(4):629&ndash;634. doi:10.1016/j.neuron.2015.10.025.</li>
+<li>Valero M, Zutshi I, Yoon E, Buzs&aacute;ki G. Probing subthreshold dynamics of hippocampal neurons by pulsed optogenetics. <i>Science</i>. 2022;375(6580):570&ndash;574. doi:10.1126/science.abm1891.</li>
+</ol>
+
+</body>
+</html>
