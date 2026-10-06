@@ -1,0 +1,18 @@
+[
+  {
+    "label": "sess9",
+    "n_pulses": 42088,
+    "detrended_r": 0.317,
+    "block_r_min": 0.218,
+    "block_r_all_positive": true,
+    "n_blocks": 20
+  },
+  {
+    "label": "sess12",
+    "n_pulses": 50309,
+    "detrended_r": 0.359,
+    "block_r_min": 0.246,
+    "block_r_all_positive": true,
+    "n_blocks": 20
+  }
+]
